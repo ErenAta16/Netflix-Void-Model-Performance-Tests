@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it as follows."
+title: "Netflix VOID (netflix/void-model) Performance Tests"
+type: software
+authors:
+  - family-names: "Ata"
+    given-names: "Eren"
+    alias: "ErenAta16"
+repository-code: "https://github.com/ErenAta16/Netflix-Void-Model-Performance-Tests"
+url: "https://github.com/ErenAta16/Netflix-Void-Model-Performance-Tests"
+license: "MIT"
+abstract: "Benchmark experiments for Netflix VOID focusing on physical causal reasoning in video object and interaction deletion."
+keywords:
+  - video inpainting
+  - physical causality
+  - object removal
+  - netflix void
+  - cogvideox
