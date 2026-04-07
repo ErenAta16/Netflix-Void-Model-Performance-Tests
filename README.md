@@ -14,23 +14,26 @@ All experiments in this repository directly test inference quality of `netflix/v
 
 ## Experiment Results
 
+GitHub README pages do not reliably render HTML `<video>` tags.  
+For this reason, results are shown as looping GIF previews below. Click any preview to open the original MP4.
+
 ### 1) Ice Cream Van Removal (Crowd Scene Obstacle)
 
 This experiment removes a large van blocking a pedestrian path. The model reconstructs plausible pavement structure and preserves crowd motion continuity while removing the object and its interaction footprint.
 
-<video src="my_video-fg=-1-0001_tuple.mp4" autoplay loop muted playsinline width="100%"></video>
+[![Ice Cream Van Result](my_video-fg=-1-0001_tuple.gif)](my_video-fg=-1-0001_tuple.mp4)
 
 ### 2) Lime Physics (Falling Object Interaction)
 
 This experiment tests temporal causality and contact behavior. After object removal, the model maintains believable motion progression and updates object-surface interaction cues.
 
-<video src="lime-fg=-1-0001_tuple.mp4" autoplay loop muted playsinline width="100%"></video>
+[![Lime Physics Result](lime-fg=-1-0001_tuple.gif)](lime-fg=-1-0001_tuple.mp4)
 
 ### 3) Ducky Float Removal (Water Surface Dynamics)
 
 This experiment focuses on fluid-like surface behavior. The output shows continuity in ripples and reflections as if the removed object had not influenced the water surface.
 
-<video src="ducky-float-fg=-1-0001_tuple.mp4" autoplay loop muted playsinline width="100%"></video>
+[![Ducky Float Result](ducky-float-fg=-1-0001_tuple.gif)](ducky-float-fg=-1-0001_tuple.mp4)
 
 ## Repository Files
 
@@ -41,6 +44,9 @@ This project is organized into two practical categories.
 - `ducky-float-fg=-1-0001_tuple.mp4`
 - `lime-fg=-1-0001_tuple.mp4`
 - `my_video-fg=-1-0001_tuple.mp4`
+- `ducky-float-fg=-1-0001_tuple.gif`
+- `lime-fg=-1-0001_tuple.gif`
+- `my_video-fg=-1-0001_tuple.gif`
 
 These are inference outputs demonstrating the model's performance on different physical reasoning scenarios.
 
