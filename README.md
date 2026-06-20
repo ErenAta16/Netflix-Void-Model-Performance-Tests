@@ -56,6 +56,7 @@ These are inference outputs demonstrating the model's performance on different p
 - `quadmask_0.mp4`: Interaction-aware 4-value quadmask for the target object.
 - `prompt.json`: Background description prompt used during generation.
 - `VOID_Inference_Colab.ipynb`: End-to-end Colab notebook for environment setup and inference.
+- `benchmark/`: Repeatable GPU benchmark wrapper and protocol for L40S and Colab runtime comparisons.
 
 ## How the Source Files Work Together
 
@@ -81,6 +82,29 @@ This representation helps the model reason about not only where to erase an obje
 3. Upload `input_video.mp4`, `quadmask_0.mp4`, and `prompt.json` when prompted.
 4. Run the inference cell (Pass 1) to generate outputs.
 5. Review generated videos under the configured output directory.
+
+## L40S Cold-Start Note
+
+Issue [#1](https://github.com/ErenAta16/Netflix-Void-Model-Performance-Tests/issues/1) tracks a startup bottleneck where L40S runs spend about 40-50 seconds loading the CogVideoX 5B transformer before inference begins.
+
+The Colab notebook now treats that as cold-start overhead and separates it from the rest of the predictor wall time:
+
+- Re-running setup reuses the `/content/void-model` checkout instead of deleting and cloning it every time.
+- `hf_transfer` is enabled for faster Hugging Face checkpoint downloads.
+- The upload cell builds `RUN_SEQS` from every valid folder under `/content/void-model/custom_data`.
+- The inference cell supports `cold_single_seq` for per-job latency and `batched_multi_seq` for amortized throughput.
+- The inference cell exposes `GPU_MEMORY_MODE`, so high-VRAM GPUs can compare `model_full_load` against the upstream `model_cpu_offload_and_qfloat8` default.
+- The inference cell streams predictor logs and prints total wall time, initialization before the transformer-load log, the transformer-load-to-sequence bracket, and the remaining wall time after the first sequence marker.
+
+A Colab `my_video` run reported `VOID predictor wall time: 175.7s`. That number is total predictor wall time for the single sequence, not cold-start time by itself. Use the updated notebook or `benchmark/run_void_benchmark.py` to split that total into cold-start/loading time and post-load inference time.
+
+The current A100 result shows the larger delay happens before the `Load transformer from checkpoint` log, so issue #1 is best treated as a predictor initialization and memory-mode problem rather than pure safetensors I/O. A100 results are diagnostic only; L40S results should be measured directly before claiming an L40S fix.
+
+This does not remove the initial load cost, but it prevents paying the same cost once per sequence when benchmarking multiple VOID cases. For a single sequence, the next fix candidate is `model_full_load` on high-VRAM GPUs. For multiple sequences, prepare all sequences first and run one predictor process.
+
+For repeatable timing, the notebook recreates the uploaded sequence directory and writes each run to a timestamped output directory. This prevents stale masks from adding extra foreground runs and prevents old outputs from being skipped.
+
+For structured GPU comparisons, use `benchmark/run_void_benchmark.py`. It records the actual GPU name, total predictor wall time, and time to the first inference sequence log in a JSON report. See `benchmark/README.md` for the L40S and Colab test matrix.
 
 ## Runtime Requirements
 
