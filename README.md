@@ -82,6 +82,20 @@ This representation helps the model reason about not only where to erase an obje
 4. Run the inference cell (Pass 1) to generate outputs.
 5. Review generated videos under the configured output directory.
 
+## L40S Cold-Start Note
+
+Issue [#1](https://github.com/ErenAta16/Netflix-Void-Model-Performance-Tests/issues/1) tracks a startup bottleneck where L40S runs spend about 40-50 seconds loading the CogVideoX 5B transformer before inference begins.
+
+The Colab notebook now treats that as cold-start overhead:
+
+- Re-running setup reuses the `/content/void-model` checkout instead of deleting and cloning it every time.
+- `hf_transfer` is enabled for faster Hugging Face checkpoint downloads.
+- The upload cell builds `RUN_SEQS` from every valid folder under `/content/void-model/custom_data`.
+- The inference cell launches one `predict_v2v.py` process with comma-separated `RUN_SEQS`, so the transformer is loaded once and then reused for each prepared sequence inside that process.
+- The inference cell prints total predictor wall time. The first run includes model loading; additional sequences in the same process amortize that load.
+
+This does not remove the initial transformer load, but it prevents paying the same load cost once per sequence when benchmarking multiple VOID cases.
+
 ## Runtime Requirements
 
 - Google Colab or equivalent Linux environment
