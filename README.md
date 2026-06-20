@@ -56,6 +56,7 @@ These are inference outputs demonstrating the model's performance on different p
 - `quadmask_0.mp4`: Interaction-aware 4-value quadmask for the target object.
 - `prompt.json`: Background description prompt used during generation.
 - `VOID_Inference_Colab.ipynb`: End-to-end Colab notebook for environment setup and inference.
+- `benchmark/`: Repeatable GPU benchmark wrapper and protocol for L40S and Colab runtime comparisons.
 
 ## How the Source Files Work Together
 
@@ -95,6 +96,8 @@ The Colab notebook now treats that as cold-start overhead:
 - The inference cell prints total predictor wall time. The first run includes model loading; additional sequences in the same process amortize that load.
 
 This does not remove the initial transformer load, but it prevents paying the same load cost once per sequence when benchmarking multiple VOID cases.
+
+For structured GPU comparisons, use `benchmark/run_void_benchmark.py`. It records the actual GPU name, total predictor wall time, and time to the first inference sequence log in a JSON report. See `benchmark/README.md` for the L40S and Colab test matrix.
 
 ## Runtime Requirements
 
