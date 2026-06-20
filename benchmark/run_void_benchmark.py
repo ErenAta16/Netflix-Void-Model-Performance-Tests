@@ -238,10 +238,15 @@ def stream_predictor(cmd: list[str], cwd: Path, gpu_sample_interval: float) -> d
     if sampler is not None:
         sampler.join(timeout=2)
 
+    wall_time_s = round(finished - started, 3)
+    time_to_first_sequence_log_s = round(first_sequence_at - started, 3) if first_sequence_at else None
+    post_first_sequence_log_s = round(finished - first_sequence_at, 3) if first_sequence_at else None
+
     return {
         "returncode": return_code,
-        "wall_time_s": round(finished - started, 3),
-        "time_to_first_sequence_log_s": round(first_sequence_at - started, 3) if first_sequence_at else None,
+        "wall_time_s": wall_time_s,
+        "time_to_first_sequence_log_s": time_to_first_sequence_log_s,
+        "post_first_sequence_log_s": post_first_sequence_log_s,
         "gpu_samples": summarize_gpu_samples(gpu_samples),
         "log_tail": line_tail,
     }
@@ -249,6 +254,10 @@ def stream_predictor(cmd: list[str], cwd: Path, gpu_sample_interval: float) -> d
 
 def sanitize_label(label: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", label).strip("_") or "void_benchmark"
+
+
+def seconds(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.1f}s"
 
 
 def main() -> int:
@@ -316,6 +325,13 @@ def main() -> int:
         result["repeat_index"] = index + 1
         result["save_path"] = str(run_save_path)
         report["runs"].append(result)
+        print(
+            "Run summary: "
+            f"wall={seconds(result['wall_time_s'])}, "
+            f"to_first_sequence_log={seconds(result['time_to_first_sequence_log_s'])}, "
+            f"after_first_sequence_log={seconds(result['post_first_sequence_log_s'])}",
+            flush=True,
+        )
         if result["returncode"] != 0:
             break
 

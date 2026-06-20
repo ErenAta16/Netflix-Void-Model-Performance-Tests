@@ -87,15 +87,17 @@ This representation helps the model reason about not only where to erase an obje
 
 Issue [#1](https://github.com/ErenAta16/Netflix-Void-Model-Performance-Tests/issues/1) tracks a startup bottleneck where L40S runs spend about 40-50 seconds loading the CogVideoX 5B transformer before inference begins.
 
-The Colab notebook now treats that as cold-start overhead:
+The Colab notebook now treats that as cold-start overhead and separates it from the rest of the predictor wall time:
 
 - Re-running setup reuses the `/content/void-model` checkout instead of deleting and cloning it every time.
 - `hf_transfer` is enabled for faster Hugging Face checkpoint downloads.
 - The upload cell builds `RUN_SEQS` from every valid folder under `/content/void-model/custom_data`.
 - The inference cell launches one `predict_v2v.py` process with comma-separated `RUN_SEQS`, so the transformer is loaded once and then reused for each prepared sequence inside that process.
-- The inference cell prints total predictor wall time. The first run includes model loading; additional sequences in the same process amortize that load.
+- The inference cell streams predictor logs and prints total wall time, time until the first `Sequence to run:` log, and the remaining wall time after that marker.
 
-This does not remove the initial transformer load, but it prevents paying the same load cost once per sequence when benchmarking multiple VOID cases.
+A Colab `my_video` run reported `VOID predictor wall time: 175.7s`. That number is total predictor wall time for the single sequence, not cold-start time by itself. Use the updated notebook or `benchmark/run_void_benchmark.py` to split that total into cold-start/loading time and post-load inference time.
+
+This does not remove the initial transformer load, but it prevents paying the same load cost once per sequence when benchmarking multiple VOID cases. For a single sequence, the expected fix is measurement clarity plus setup/download reuse; for multiple sequences, the fix is to prepare all sequences first and run one predictor process.
 
 For structured GPU comparisons, use `benchmark/run_void_benchmark.py`. It records the actual GPU name, total predictor wall time, and time to the first inference sequence log in a JSON report. See `benchmark/README.md` for the L40S and Colab test matrix.
 

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.runpod/
+.vast/
+void-model/
+void_outputs/
+benchmark/reports/*.json
+benchmark/reports/**/*.json

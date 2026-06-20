@@ -10,6 +10,7 @@ This benchmark is for issue #1: measuring how much time VOID spends before infer
 - driver, CUDA, Python, and Torch metadata
 - total predictor wall time
 - time to the first `Sequence to run:` log line, which approximates cold-start model load time
+- wall time after the first `Sequence to run:` log line, which keeps denoising/output time separate from startup
 - optional sampled peak GPU memory and utilization
 - command log tail for debugging
 
@@ -67,11 +68,30 @@ Open `VOID_Inference_Colab.ipynb`, choose a GPU runtime, and run setup/download/
 
 If Colab assigns a different GPU after reconnecting, keep the JSON report from each run. The GPU name in the report is the source of truth.
 
+### Interpreting the Current Colab Result
+
+The current `my_video` Colab run printed:
+
+```text
+Running sequences in one predictor process: my_video
+The first part of this wall time includes CogVideoX transformer cold-start loading.
+VOID predictor wall time: 175.7s
+```
+
+Because that notebook cell used `subprocess.run`, the `175.7s` number is total predictor wall time. It includes cold-start loading, denoising, decoding, and output writing. It should not be reported as the transformer load time by itself.
+
+The updated notebook and benchmark wrapper stream predictor output and timestamp the first `Sequence to run:` line. Use that marker to split the total into:
+
+- `time_to_first_sequence_log_s`: approximate model setup and cold-start time.
+- `post_first_sequence_log_s`: remaining predictor time after sequence processing begins.
+
+For one sequence, the cold-start cost is unavoidable. For multiple videos, prepare every sequence first and run them in one predictor process so the CogVideoX transformer is loaded once and reused across all prepared sequences.
+
 ## Commit Policy
 
 Use measurement reports to decide follow-up commits:
 
-- If L40S `time_to_first_sequence_log_s` is near 40-50 seconds but multi-sequence wall time improves, keep the batch/amortization workflow.
+- If L40S `time_to_first_sequence_log_s` is near 40-50 seconds but multi-sequence wall time improves, keep the batch/amortization workflow and document that issue #1 is a cold-start amortization problem rather than a per-frame inference bug.
 - If Colab GPUs fail due to memory, document the failing GPU and adjust notebook defaults rather than hiding the failure.
 - If A100/L40S pass but T4/L4 fail, keep the runtime requirement explicit and add a compatibility table.
 - Commit benchmark JSON summaries only when they are small enough to review. Do not commit generated videos from benchmark reruns unless the visual output changed intentionally.
