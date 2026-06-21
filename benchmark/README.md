@@ -164,6 +164,10 @@ python benchmark/summarize_reports.py
 
 The summary table is intended for issue comments and pull request descriptions.
 
+## Recorded Results
+
+- [2026-06-21 Colab A100 cold single-sequence benchmark](results/2026-06-21-colab-a100-cold-single-seq.md)
+
 ## Commit Policy
 
 Use measurement reports to decide follow-up commits:
